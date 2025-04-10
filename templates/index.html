@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Relatórios de Teste</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Test Report Generator</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" id="newTestBtn">Novo Teste</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/report" target="_blank">Ver Relatório</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Lista de Testes -->
+            <div class="col-md-3 sidebar">
+                <div class="list-group mt-3" id="testList">
+                    <!-- Testes serão inseridos aqui -->
+                </div>
+            </div>
+
+            <!-- Formulário de Teste -->
+            <div class="col-md-9 main-content">
+                <form id="testForm" class="mt-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-bs-toggle="tab" href="#basicInfo">Informações Básicas</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#steps">Steps</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#environment">Ambiente</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#custom">Campos Personalizados</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-body">
+                            <div class="tab-content">
+                                <!-- Informações Básicas -->
+                                <div class="tab-pane fade show active" id="basicInfo">
+                                    <div class="mb-3">
+                                        <label class="form-label">Nome do Teste</label>
+                                        <input type="text" class="form-control" name="name" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Descrição</label>
+                                        <textarea class="form-control" name="description" rows="3"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <select class="form-select" name="status">
+                                            <option value="pass">Passou</option>
+                                            <option value="fail">Falhou</option>
+                                            <option value="skip">Pulado</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Categorias</label>
+                                        <input type="text" class="form-control" name="categories" 
+                                               placeholder="Separadas por vírgula">
+                                    </div>
+                                </div>
+
+                                <!-- Steps -->
+                                <div class="tab-pane fade" id="steps">
+                                    <div id="stepsList">
+                                        <!-- Steps serão inseridos aqui -->
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary mt-3" id="addStepBtn">
+                                        <i class="material-icons">add</i> Adicionar Step
+                                    </button>
+                                </div>
+
+                                <!-- Ambiente -->
+                                <div class="tab-pane fade" id="environment">
+                                    <div id="envList">
+                                        <!-- Variáveis de ambiente serão inseridas aqui -->
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary mt-3" id="addEnvBtn">
+                                        <i class="material-icons">add</i> Adicionar Variável
+                                    </button>
+                                </div>
+
+                                <!-- Campos Personalizados -->
+                                <div class="tab-pane fade" id="custom">
+                                    <div id="customFieldsList">
+                                        <!-- Campos personalizados serão inseridos aqui -->
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary mt-3" id="addCustomFieldBtn">
+                                        <i class="material-icons">add</i> Adicionar Campo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Salvar Teste</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html> 

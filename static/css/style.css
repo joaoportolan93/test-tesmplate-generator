@@ -1,0 +1,98 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.sidebar {
+    background-color: white;
+    min-height: calc(100vh - 56px);
+    border-right: 1px solid #dee2e6;
+    padding: 15px;
+}
+
+.main-content {
+    padding: 15px;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.list-group-item {
+    cursor: pointer;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.list-group-item.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.material-icons {
+    vertical-align: middle;
+    font-size: 20px;
+    margin-right: 5px;
+}
+
+.step-item, .env-item, .custom-field-item {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.remove-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    color: #dc3545;
+}
+
+.nav-tabs .nav-link {
+    color: #495057;
+}
+
+.nav-tabs .nav-link.active {
+    color: #0d6efd;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+.btn-outline-primary {
+    border-width: 2px;
+}
+
+.status-badge {
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    margin-left: 8px;
+}
+
+.status-pass {
+    background-color: #198754;
+    color: white;
+}
+
+.status-fail {
+    background-color: #dc3545;
+    color: white;
+}
+
+.status-skip {
+    background-color: #ffc107;
+    color: black;
+}
+
+.timestamp {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 5px;
+} 
