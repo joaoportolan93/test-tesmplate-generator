@@ -1,77 +1,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <style>
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
+            margin: 20px;
         }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-        }
-        
-        .timestamp {
-            color: #666;
-            font-size: 14px;
-            margin-top: 5px;
-        }
-        
-        .summary {
-            margin-bottom: 30px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-        
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            text-align: center;
-        }
-        
         .test-item {
             margin-bottom: 30px;
+            border: 1px solid #ddd;
             padding: 15px;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
+            page-break-inside: avoid;
         }
-        
         .test-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
             margin-bottom: 10px;
         }
-        
         .status-badge {
             padding: 3px 8px;
             border-radius: 12px;
             font-size: 12px;
             color: white;
+            display: inline-block;
         }
-        
         .status-pass { background-color: #198754; }
         .status-fail { background-color: #dc3545; }
         .status-skip { background-color: #ffc107; color: black; }
         
         .step-list {
-            margin: 15px 0;
+            margin: 10px 0;
             padding-left: 20px;
         }
-        
         .step-item {
-            margin-bottom: 10px;
+            margin: 5px 0;
             padding: 5px;
-            border-left: 3px solid #dee2e6;
+            border-left: 3px solid #ddd;
         }
-        
         .step-info { border-left-color: #0dcaf0; }
         .step-pass { border-left-color: #198754; }
         .step-fail { border-left-color: #dc3545; }
@@ -80,101 +47,94 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 15px 0;
-            font-size: 14px;
+            margin: 10px 0;
         }
-        
         th, td {
+            border: 1px solid #ddd;
             padding: 8px;
-            border: 1px solid #dee2e6;
             text-align: left;
         }
-        
         th {
             background-color: #f8f9fa;
-            font-weight: bold;
-        }
-        
-        .custom-fields {
-            margin-top: 15px;
-            font-size: 14px;
-            color: #666;
-        }
-        
-        @page {
-            margin: 1cm;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Relatório de Testes</h1>
-        <div class="timestamp">Gerado em: {{ now().strftime('%d/%m/%Y %H:%M:%S') }}</div>
-    </div>
-
-    <div class="summary">
-        <h2>Resumo</h2>
-        <div class="summary-grid">
-            <div>
-                <h3>{{ tests|length }}</h3>
-                <p>Total de Testes</p>
-            </div>
-            <div>
-                <h3>{{ tests|selectattr('3', 'equalto', 'pass')|list|length }}</h3>
-                <p>Passou</p>
-            </div>
-            <div>
-                <h3>{{ tests|selectattr('3', 'equalto', 'fail')|list|length }}</h3>
-                <p>Falhou</p>
-            </div>
-            <div>
-                <h3>{{ tests|selectattr('3', 'equalto', 'skip')|list|length }}</h3>
-                <p>Pulado</p>
-            </div>
-        </div>
-    </div>
+    <h1>Relatório de Testes</h1>
+    <p>Gerado em: {{ datetime.now().strftime('%d/%m/%Y %H:%M:%S') }}</p>
 
     {% for test in tests %}
     <div class="test-item">
         <div class="test-header">
-            <h3>{{ test[1] }}</h3>
-            <span class="status-badge status-{{ test[3] }}">{{ test[3] }}</span>
+            <h2>{{ test.name }}</h2>
+            <span class="status-badge status-{{ test.status }}">{{ test.status }}</span>
         </div>
         
-        <p>{{ test[2] or '' }}</p>
-        <small class="timestamp">{{ test[4] }}</small>
-        
-        <!-- Steps -->
+        {% if test.description %}
+        <p>{{ test.description }}</p>
+        {% endif %}
+
+        {% if test.image_data %}
+        <div style="margin: 15px 0;">
+            <img src="{{ test.image_data }}" alt="Imagem do teste" style="max-width: 100%; max-height: 300px;">
+        </div>
+        {% endif %}
+
+        {% if test.steps %}
+        <h3>Steps</h3>
         <div class="step-list">
-            {% for step in test[6]|fromjson %}
+            {% for step in test.steps %}
             <div class="step-item step-{{ step.status }}">
                 <strong>{{ step.description }}</strong>
-                <p>{{ step.details or '' }}</p>
+                {% if step.details %}
+                <p>{{ step.details }}</p>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
-        
-        <!-- Environment -->
-        <div class="environment">
-            <h4>Ambiente</h4>
-            <table>
-                <tbody>
-                    {% for key, value in (test[7]|fromjson).items() %}
-                    <tr>
-                        <td><strong>{{ key }}</strong></td>
-                        <td>{{ value }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Custom Fields -->
-        <div class="custom-fields">
-            {% for key, value in (test[8]|fromjson).items() %}
-            <div><strong>{{ key }}:</strong> {{ value }}</div>
-            {% endfor %}
-        </div>
+        {% endif %}
+
+        {% if test.environment %}
+        <h3>Ambiente</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Variável</th>
+                    <th>Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, value in test.environment|dictsort %}
+                <tr>
+                    <td>{{ key }}</td>
+                    <td>{{ value }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% if test.custom_fields %}
+        <h3>Campos Personalizados</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Campo</th>
+                    <th>Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, value in test.custom_fields|dictsort %}
+                <tr>
+                    <td>{{ key }}</td>
+                    <td>{{ value }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        <p class="timestamp">Data/Hora: {{ test.timestamp }}</p>
     </div>
     {% endfor %}
 </body>

@@ -15,6 +15,28 @@ $(document).ready(function() {
         $('#customFieldsList').empty();
     });
 
+    // Handler para upload de imagem
+    $('#imageInput').change(function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                $('#imagePreview img').attr('src', e.target.result);
+                $('#imagePreview').show();
+                $('#removeImageBtn').show();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Handler para remover imagem
+    $('#removeImageBtn').click(function() {
+        $('#imageInput').val('');
+        $('#imagePreview').hide();
+        $('#imagePreview img').attr('src', '');
+        $(this).hide();
+    });
+
     // Handler para submissão do formulário
     $('#testForm').submit(function(e) {
         e.preventDefault();
@@ -23,29 +45,41 @@ $(document).ready(function() {
 });
 
 function loadTests() {
-    $.get('/api/tests', function(tests) {
+    $.ajax({
+        url: '/api/tests',
+        type: 'GET',
+        success: function(tests) {
         $('#testList').empty();
+            if (tests && tests.length > 0) {
         tests.forEach(function(test) {
             addTestToList(test);
         });
+            } else {
+                $('#testList').append('<div class="list-group-item">Nenhum teste encontrado</div>');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Erro ao carregar testes:', error);
+            $('#testList').append('<div class="list-group-item text-danger">Erro ao carregar testes</div>');
+        }
     });
 }
 
 function addTestToList(test) {
-    const statusClass = `status-${test[3]}`;
+    const statusClass = `status-${test.status}`;
     const item = $(`
-        <a href="#" class="list-group-item list-group-item-action" data-id="${test[0]}">
+        <a href="#" class="list-group-item list-group-item-action" data-id="${test.id}">
             <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-1">${test[1]}</h6>
-                <span class="status-badge ${statusClass}">${test[3]}</span>
+                <h6 class="mb-1">${test.name}</h6>
+                <span class="status-badge ${statusClass}">${test.status}</span>
             </div>
-            <p class="mb-1">${test[2] || ''}</p>
-            <small class="timestamp">${test[4]}</small>
+            <p class="mb-1">${test.description || ''}</p>
+            <small class="timestamp">${test.timestamp}</small>
         </a>
     `);
     
     item.click(function() {
-        loadTestDetails(test[0]);
+        loadTestDetails(test.id);
     });
     
     $('#testList').append(item);
@@ -127,15 +161,24 @@ function addCustomField() {
 }
 
 function saveTest() {
+    const imageData = $('#imagePreview img').attr('src') || null;
+
     const formData = {
         name: $('input[name="name"]').val(),
         description: $('textarea[name="description"]').val(),
         status: $('select[name="status"]').val(),
-        categories: $('input[name="categories"]').val().split(',').map(c => c.trim()),
+        categories: $('input[name="categories"]').val().split(',').map(c => c.trim()).filter(c => c),
         steps: getSteps(),
         environment: getEnvironment(),
-        custom_fields: getCustomFields()
+        custom_fields: getCustomFields(),
+        image_data: imageData
     };
+
+    // Validação básica
+    if (!formData.name) {
+        alert('Por favor, preencha o nome do teste.');
+        return;
+    }
 
     $.ajax({
         url: '/api/tests',
@@ -145,12 +188,15 @@ function saveTest() {
         success: function(response) {
             if (response.status === 'success') {
                 alert('Teste salvo com sucesso!');
-                loadTests();
-                $('#newTestBtn').click();
+                loadTests();  // Recarrega a lista de testes
+                $('#newTestBtn').click();  // Limpa o formulário
+            } else {
+                alert('Erro ao salvar o teste: ' + (response.error || 'Erro desconhecido'));
             }
         },
-        error: function() {
-            alert('Erro ao salvar o teste.');
+        error: function(xhr, status, error) {
+            console.error('Erro ao salvar teste:', error);
+            alert('Erro ao salvar o teste. Por favor, tente novamente.');
         }
     });
 }

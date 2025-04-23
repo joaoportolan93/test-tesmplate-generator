@@ -82,6 +82,18 @@
                                         <input type="text" class="form-control" name="categories" 
                                                placeholder="Separadas por vírgula">
                                     </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Imagem</label>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <input type="file" class="form-control" id="imageInput" accept="image/*">
+                                            <button type="button" class="btn btn-outline-danger" id="removeImageBtn" style="display: none;">
+                                                <i class="material-icons">delete</i>
+                                            </button>
+                                        </div>
+                                        <div id="imagePreview" class="mt-2" style="display: none;">
+                                            <img src="" alt="Preview" style="max-width: 300px; max-height: 200px;" class="img-thumbnail">
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Steps -->

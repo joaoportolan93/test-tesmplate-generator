@@ -1,0 +1,41 @@
+# Ambiente virtual
+venv/
+env/
+ENV/
+
+# Arquivos de banco de dados
+*.db
+*.sqlite3
+
+# Arquivos Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Logs
+*.log
+
+# Arquivos temporários
+tmp/
+temp/
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db 

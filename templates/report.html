@@ -167,6 +167,24 @@
         .material-icons {
             font-size: 20px;
         }
+        
+        .delete-btn {
+            color: #dc3545;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .delete-btn:hover {
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+        
+        .test-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -190,50 +208,59 @@
     <div class="dashboard-container">
         <div class="dashboard-view">
             <div class="row summary-row">
-                <!-- Resumo -->
                 <div class="col-md-8">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Resumo</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title mb-0">Resumo</h5>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary" id="selectAllBtn">Selecionar Todos</button>
+                                    <button class="btn btn-sm btn-outline-primary" id="deselectAllBtn">Desmarcar Todos</button>
+                                </div>
+                            </div>
                             <div class="row text-center">
                                 <div class="col">
                                     <h3 id="totalTests">0</h3>
-                                    <p>Total de Testes</p>
+                                    <p>Total</p>
                                 </div>
                                 <div class="col">
-                                    <h3 id="passedTests" class="text-success">0</h3>
+                                    <h3 id="passedTests">0</h3>
                                     <p>Passou</p>
                                 </div>
                                 <div class="col">
-                                    <h3 id="failedTests" class="text-danger">0</h3>
+                                    <h3 id="failedTests">0</h3>
                                     <p>Falhou</p>
                                 </div>
                                 <div class="col">
-                                    <h3 id="skippedTests" class="text-warning">0</h3>
+                                    <h3 id="skippedTests">0</h3>
                                     <p>Pulado</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Gráfico -->
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Distribuição</h5>
-                            <div class="chart-container">
-                                <canvas id="statusChart"></canvas>
+                            <h5 class="card-title">Exportar Selecionados</h5>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-danger" id="exportPdfBtn" disabled>
+                                    <i class="material-icons">picture_as_pdf</i>
+                                    Exportar PDF
+                                </button>
+                                <button class="btn btn-success" id="exportExcelBtn" disabled>
+                                    <i class="material-icons">table_view</i>
+                                    Exportar Excel
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Lista de Testes com Scroll -->
             <div class="test-list-container">
                 <div class="test-list">
-                    <!-- Testes serão inseridos aqui via JavaScript -->
+                    <!-- Testes serão inseridos aqui -->
                 </div>
             </div>
         </div>
@@ -244,107 +271,219 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         $(document).ready(function() {
-            // Atualizar timestamp
-            const now = new Date();
-            $('#timestamp').text(now.toLocaleString());
-            
-            // Carregar testes
-            $.get('/api/tests', function(tests) {
-                let passed = 0, failed = 0, skipped = 0;
-                
-                tests.forEach(function(test) {
-                    // Contar status
-                    if (test[3] === 'pass') passed++;
-                    else if (test[3] === 'fail') failed++;
-                    else if (test[3] === 'skip') skipped++;
-                    
-                    // Adicionar teste à lista
-                    addTestToReport(test);
-                });
-                
-                // Atualizar contadores
-                $('#totalTests').text(tests.length);
-                $('#passedTests').text(passed);
-                $('#failedTests').text(failed);
-                $('#skippedTests').text(skipped);
-                
-                // Criar gráfico
-                createChart(passed, failed, skipped);
+            loadTestData();
+
+            // Handlers para os botões de seleção
+            $('#selectAllBtn').click(function() {
+                $('.test-checkbox').prop('checked', true).trigger('change');
+            });
+
+            $('#deselectAllBtn').click(function() {
+                $('.test-checkbox').prop('checked', false).trigger('change');
+            });
+
+            // Handlers para os botões de exportação
+            $('#exportPdfBtn').click(function() {
+                exportTests('pdf');
+            });
+
+            $('#exportExcelBtn').click(function() {
+                exportTests('excel');
             });
         });
-        
-        function addTestToReport(test) {
-            const testHtml = `
-                <div class="test-item">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">${test[1]}</h5>
-                        <span class="status-badge status-${test[3]}">${test[3]}</span>
-                    </div>
-                    <p class="text-muted mb-2">${test[2] || ''}</p>
-                    <small class="text-muted d-block mb-2">${test[4]}</small>
-                    
-                    <!-- Steps -->
-                    <div class="step-list">
-                        ${JSON.parse(test[6] || '[]').map(step => `
-                            <div class="step-item step-${step.status}">
-                                <strong>${step.description}</strong>
-                                <p class="mb-0">${step.details || ''}</p>
+
+        function loadTestData() {
+            $.ajax({
+                url: '/api/tests',
+                type: 'GET',
+                success: function(tests) {
+                    updateDashboard(tests);
+                    displayTests(tests);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erro ao carregar dados:', error);
+                    alert('Erro ao carregar os dados dos testes. Por favor, recarregue a página.');
+                }
+            });
+        }
+
+        function updateDashboard(tests) {
+            const total = tests.length;
+            const passed = tests.filter(t => t.status === 'pass').length;
+            const failed = tests.filter(t => t.status === 'fail').length;
+            const skipped = tests.filter(t => t.status === 'skip').length;
+
+            $('#totalTests').text(total);
+            $('#passedTests').text(passed);
+            $('#failedTests').text(failed);
+            $('#skippedTests').text(skipped);
+        }
+
+        function displayTests(tests) {
+            const container = $('.test-list-container');
+            container.empty();
+
+            tests.forEach(function(test) {
+                const testHtml = `
+                    <div class="test-item" data-test-id="${test.id}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="d-flex align-items-center">
+                                <div class="form-check me-3">
+                                    <input class="form-check-input test-checkbox" type="checkbox" value="${test.id}" id="test${test.id}">
+                                </div>
+                                <div>
+                                    <div class="test-header">
+                                        <h5 class="mb-1">${test.name}</h5>
+                                        <i class="material-icons delete-btn" title="Deletar teste">delete</i>
+                                    </div>
+                                    <p class="mb-1">${test.description || ''}</p>
+                                </div>
                             </div>
-                        `).join('')}
+                            <span class="status-badge status-${test.status}">${test.status}</span>
+                        </div>
+                        
+                        ${test.image_data ? `
+                        <div class="mt-3">
+                            <img src="${test.image_data}" alt="Imagem do teste" class="img-fluid" style="max-height: 300px;">
+                        </div>
+                        ` : ''}
+                        
+                        <div class="step-list">
+                            ${renderSteps(test.steps)}
+                        </div>
+                        
+                        ${renderEnvironment(test.environment)}
+                        ${renderCustomFields(test.custom_fields)}
+                        
+                        <small class="text-muted d-block mt-2">
+                            ${new Date(test.timestamp).toLocaleString()}
+                        </small>
                     </div>
-                    
-                    <!-- Environment -->
+                `;
+                container.append(testHtml);
+            });
+
+            // Adicionar handler para mudança nas checkboxes
+            $('.test-checkbox').change(function() {
+                updateExportButtons();
+            });
+
+            // Adicionar handler para o botão de deletar
+            $('.delete-btn').click(function() {
+                const testItem = $(this).closest('.test-item');
+                const testId = testItem.data('test-id');
+                const testName = testItem.find('h5').text();
+                
+                if (confirm(`Tem certeza que deseja deletar o teste "${testName}"?`)) {
+                    deleteTest(testId, testItem);
+                }
+            });
+        }
+
+        function updateExportButtons() {
+            const selectedCount = $('.test-checkbox:checked').length;
+            $('#exportPdfBtn, #exportExcelBtn').prop('disabled', selectedCount === 0);
+        }
+
+        function exportTests(format) {
+            const selectedIds = $('.test-checkbox:checked').map(function() {
+                return $(this).val();
+            }).get();
+
+            if (selectedIds.length === 0) {
+                alert('Por favor, selecione pelo menos um teste para exportar.');
+                return;
+            }
+
+            const queryString = selectedIds.map(id => `ids[]=${id}`).join('&');
+            window.open(`/export/${format}?${queryString}`, '_blank');
+        }
+
+        function renderSteps(stepsJson) {
+            try {
+                const steps = JSON.parse(stepsJson || '[]');
+                return steps.map(step => `
+                    <div class="step-item step-${step.status}">
+                        <strong>${step.description}</strong>
+                        ${step.details ? `<p class="mb-0 mt-1">${step.details}</p>` : ''}
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Erro ao processar steps:', e);
+                return '';
+            }
+        }
+
+        function renderEnvironment(envJson) {
+            try {
+                const env = JSON.parse(envJson || '{}');
+                if (Object.keys(env).length === 0) return '';
+                
+                return `
                     <div class="mt-3">
-                        <h6 class="mb-2">Ambiente</h6>
+                        <h6>Ambiente</h6>
                         <table class="table table-sm env-table">
                             <tbody>
-                                ${Object.entries(JSON.parse(test[7] || '{}')).map(([key, value]) => `
+                                ${Object.entries(env).map(([key, value]) => `
                                     <tr>
-                                        <td><strong>${key}</strong></td>
+                                        <td class="fw-bold">${key}</td>
                                         <td>${value}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
                     </div>
-                    
-                    <!-- Custom Fields -->
-                    <div class="mt-3 custom-fields">
-                        ${Object.entries(JSON.parse(test[8] || '{}')).map(([key, value]) => `
-                            <div><strong>${key}:</strong> ${value}</div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-            
-            $('.test-list').append(testHtml);
+                `;
+            } catch (e) {
+                console.error('Erro ao processar environment:', e);
+                return '';
+            }
         }
-        
-        function createChart(passed, failed, skipped) {
-            const ctx = document.getElementById('statusChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Passou', 'Falhou', 'Pulado'],
-                    datasets: [{
-                        data: [passed, failed, skipped],
-                        backgroundColor: ['#198754', '#dc3545', '#ffc107']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                boxWidth: 12,
-                                font: {
-                                    size: 11
-                                }
-                            }
-                        }
+
+        function renderCustomFields(fieldsJson) {
+            try {
+                const fields = JSON.parse(fieldsJson || '{}');
+                if (Object.keys(fields).length === 0) return '';
+                
+                return `
+                    <div class="mt-3 custom-fields">
+                        <h6>Campos Personalizados</h6>
+                        <dl class="row mb-0">
+                            ${Object.entries(fields).map(([key, value]) => `
+                                <dt class="col-sm-3">${key}</dt>
+                                <dd class="col-sm-9">${value}</dd>
+                            `).join('')}
+                        </dl>
+                    </div>
+                `;
+            } catch (e) {
+                console.error('Erro ao processar campos personalizados:', e);
+                return '';
+            }
+        }
+
+        function updateChart(passed, failed, skipped) {
+            // Implementar atualização do gráfico aqui
+            // Você pode usar uma biblioteca como Chart.js
+        }
+
+        function deleteTest(testId, testItem) {
+            $.ajax({
+                url: `/api/tests/${testId}`,
+                type: 'DELETE',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        testItem.fadeOut(300, function() {
+                            $(this).remove();
+                            loadTestData(); // Recarrega os dados para atualizar o resumo
+                        });
+                    } else {
+                        alert('Erro ao deletar o teste: ' + (response.error || 'Erro desconhecido'));
                     }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erro ao deletar teste:', error);
+                    alert('Erro ao deletar o teste. Por favor, tente novamente.');
                 }
             });
         }
